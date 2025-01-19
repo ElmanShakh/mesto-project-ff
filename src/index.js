@@ -1,8 +1,17 @@
-import {  pushCard, addCard, deleteCard, likeCard, createNewCard, addNewCard, cardContent } from './scripts/card.js';
-import { openPopup, closePopup, closePopupEsc, closePopupOveray} from './scripts/modal.js';
+import { addCard, deleteCard, likeCard, addNewCard,  } from './scripts/card.js';
+import { openPopup, closePopup } from './scripts/modal.js';
 import './pages/index.css'
 export {openImage}
+import { initialCards } from './scripts/cards.js';
 
+    const content = document.querySelector('.content');
+    const cardContent = content.querySelector('.places__list');
+    
+    function pushCard() {
+      initialCards.forEach(({name, link, alt}) => {
+        cardContent.append(addCard({name, link, alt}, deleteCard));
+      });
+    };
 
 pushCard();
 
@@ -21,7 +30,11 @@ const popupTypeImage = document.querySelector('.popup_type_image');
 const popupImage = popupTypeImage.querySelector('.popup__image') //находим для открытия картинки при клике
 const popupDescription = document.querySelector('.popup__caption') // находим для подписи
 
-profileEditButton.addEventListener('click', () => openPopup(popupTypeEdit)); // открытие эдит
+profileEditButton.addEventListener('click', () => {
+  nameInput.value = profileTitle.textContent; // заполняем данными которые уже на сайте
+  jobInput.value = profileDescription.textContent;
+  openPopup(popupTypeEdit);
+})
 
 newCardButton.addEventListener('click', () => openPopup(popupTypeAdd)); // открытие добавить 
 
@@ -52,8 +65,6 @@ const popupForm = document.querySelector('.popup__form') // получаю фо�
 const nameInput = popupForm.querySelector('.popup__input_type_name'); // получаю элементы формы
 const jobInput = popupForm.querySelector('.popup__input_type_description');
 
-nameInput.value = profileTitle.textContent; // заполняем данными которые уже на сайте
-jobInput.value = profileDescription.textContent;
 
 function editProfile(evt) {
   evt.preventDefault(); // сброс 
@@ -72,6 +83,23 @@ popupForm.addEventListener('submit', editProfile);
 /// добавления карточки 
 
 const addCardForm = document.querySelector('.popup_type_new-card') 
+const nameAddCardForm = document.querySelector('.popup__input_type_card-name'); // получаем как в предыдущей функции поля
+const linkAddCardForm = document.querySelector('.popup__input_type_url');
+
+function createNewCard (evt) {
+  evt.preventDefault(); 
+
+  const name = nameAddCardForm.value;
+  const link = linkAddCardForm.value;
+
+  const newCard = addNewCard({name: name, link: link}, deleteCard );
+  cardContent.prepend(newCard); 
+
+  nameAddCardForm.value=''; 
+  linkAddCardForm.value = '';
+
+  closePopup(addCardForm);
+}
 
 addCardForm.addEventListener('submit', createNewCard);
 
@@ -85,4 +113,4 @@ function openImage(image) {
   openPopup(popupTypeImage)
 }
 
-cardContent.addEventListener('click', likeCard)
+cardContent.addEventListener('click', likeCard);
