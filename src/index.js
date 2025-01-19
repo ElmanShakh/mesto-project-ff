@@ -1,12 +1,15 @@
-import {  pushCard, addCard, deleteCard, likeCard, newCardCreate, addNewCard } from './scripts/card.js';
+import {  pushCard, addCard, deleteCard, likeCard, createNewCard, addNewCard, cardContent } from './scripts/card.js';
 import { openPopup, closePopup, closePopupEsc, closePopupOveray} from './scripts/modal.js';
 import './pages/index.css'
+export {openImage}
 
+
+pushCard();
 
 // 1 задание пр6 открытие модального окна
 const popup = document.querySelector('.popup');
 
-const editButton = document.querySelector('.profile__edit-button'); // кнопка эдит у имени
+const profileEditButton = document.querySelector('.profile__edit-button'); // кнопка эдит у имени 
 const popupTypeEdit = document.querySelector('.popup_type_edit');  // popup for editButton 
 
 const newCardButton = document.querySelector('.profile__add-button'); // кнопка добавления карточки
@@ -15,11 +18,10 @@ const popupTypeAdd = document.querySelector('.popup_type_new-card') // pоpup fo
 const imageButton = document.querySelectorAll('.card__image'); // кнопка добавления по фотке
 const popupTypeImage = document.querySelector('.popup_type_image');
 
-
 const popupImage = popupTypeImage.querySelector('.popup__image') //находим для открытия картинки при клике
-const popupDescription = popupTypeImage.querySelector('.popup__caption') // находим для подписи
+const popupDescription = document.querySelector('.popup__caption') // находим для подписи
 
-editButton.addEventListener('click', () => openPopup(popupTypeEdit)); // открытие эдит
+profileEditButton.addEventListener('click', () => openPopup(popupTypeEdit)); // открытие эдит
 
 newCardButton.addEventListener('click', () => openPopup(popupTypeAdd)); // открытие добавить 
 
@@ -29,7 +31,7 @@ imageButton.forEach(imageButton => {
   });
 });
 
-// 1 задание CLOSE overlay
+// 1  CLOSE overlay
 
 document.addEventListener('click', (evt) => {
   if (evt.target.classList.contains('popup__close')) {
@@ -40,21 +42,20 @@ document.addEventListener('click', (evt) => {
   }
 });
 
-
 // Далее формы
 
 const profileTitle = document.querySelector('.profile__title'); // это поле где надпись имя
 const profileDescription = document.querySelector('.profile__description'); // это поле где надпись работа
 
-const formElement = document.querySelector('.popup__form') // получаю форму
+const popupForm = document.querySelector('.popup__form') // получаю форму popupForm
 
-const nameInput = formElement.querySelector('.popup__input_type_name'); // получаю элементы формы
-const jobInput = formElement.querySelector('.popup__input_type_description');
+const nameInput = popupForm.querySelector('.popup__input_type_name'); // получаю элементы формы
+const jobInput = popupForm.querySelector('.popup__input_type_description');
 
 nameInput.value = profileTitle.textContent; // заполняем данными которые уже на сайте
 jobInput.value = profileDescription.textContent;
 
-function handleFormSubmit(evt) {
+function editProfile(evt) {
   evt.preventDefault(); // сброс 
 
   const name = nameInput.value; // получаем значения
@@ -66,29 +67,22 @@ function handleFormSubmit(evt) {
   closePopup(popup);
 }
 
-formElement.addEventListener('submit', handleFormSubmit);
-
+popupForm.addEventListener('submit', editProfile);
 
 /// добавления карточки 
 
 const addCardForm = document.querySelector('.popup_type_new-card') 
 
-addCardForm.addEventListener('submit', newCardCreate);
+addCardForm.addEventListener('submit', createNewCard);
 
 // функция открытия картинки
 
 function openImage(image) {
   popupImage.src = image.src;
-  popupImage.alt = image.alt;
-  popupDescription.textContent = image.alt;
+  popupImage.alt = image.alt; 
+  const cardTitle = image.closest('.card').querySelector('.card__title').textContent
+  popupDescription.textContent = cardTitle; //тут другое
   openPopup(popupTypeImage)
-
 }
 
-//Лайк карточки
-
-const buttonLike = document.querySelectorAll('.card__like-button')
-likeCard(buttonLike);
-
-
-
+cardContent.addEventListener('click', likeCard)
