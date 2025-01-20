@@ -1,7 +1,6 @@
 import { addCard, deleteCard, likeCard, addNewCard,  } from './scripts/card.js';
 import { openPopup, closePopup } from './scripts/modal.js';
 import './pages/index.css'
-export {openImage}
 import { initialCards } from './scripts/cards.js';
 
     const content = document.querySelector('.content');
@@ -92,7 +91,7 @@ function createNewCard (evt) {
   const name = nameAddCardForm.value;
   const link = linkAddCardForm.value;
 
-  const newCard = addNewCard({name: name, link: link}, deleteCard );
+  const newCard = addNewCard({name: name, link: link}, deleteCard, openImage );
   cardContent.prepend(newCard); 
 
   nameAddCardForm.value=''; 

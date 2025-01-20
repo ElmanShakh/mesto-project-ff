@@ -1,5 +1,5 @@
 export {  addCard, deleteCard, likeCard, addNewCard}
-import { openImage } from '../index.js';
+
     
 function addCard({name, link, alt}, deleteCard){
   const cardTemplate = document.querySelector('#card-template').content;
@@ -27,7 +27,7 @@ function likeCard(evt) {
   }
 }
 
-function addNewCard({name, link}, deleteCard) {
+function addNewCard({name, link}, deleteCard, openImage) {
   const cardElement = addCard({name, link}, deleteCard);
   const cardImage = cardElement.querySelector('.card__image');
   cardImage.addEventListener('click', () => openImage(cardImage));
