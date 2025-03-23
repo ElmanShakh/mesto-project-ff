@@ -1,0 +1,5 @@
+.btn_and_count {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}

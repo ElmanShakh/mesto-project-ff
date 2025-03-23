@@ -1,18 +1,26 @@
-import { addCard, deleteCard, likeCard, addNewCard,  } from './scripts/card.js';
+import { addCard, deleteCard, likeCard, addNewCard } from './scripts/card.js';
 import { openPopup, closePopup } from './scripts/modal.js';
 import './pages/index.css'
 import { initialCards } from './scripts/cards.js';
+import {enableValidation, clearValidation, validationConfig} from './scripts/validation.js'
 
-    const content = document.querySelector('.content');
-    const cardContent = content.querySelector('.places__list');
-    
-    function pushCard() {
-      initialCards.forEach(({name, link, alt}) => {
-        cardContent.append(addCard({name, link, alt}, deleteCard));
-      });
-    };
+import { getUserInfo, postCard, downloadCard, changeAvatar, editUserProfile} from './scripts/api.js';
 
-pushCard();
+
+
+const content = document.querySelector('.content');
+const cardContent = content.querySelector('.places__list');
+
+function pushCard(cards, userId, deleteCard) {
+  cards.forEach(cardData => {
+    const cardElement = addCard(cardData, userId, deleteCard);
+    const cardImage = cardElement.querySelector('.card__image'); 
+    cardImage.addEventListener('click', (evt) => {
+      openImage(evt.target);
+    });
+    cardContent.append(cardElement);
+  });
+}
 
 // 1 задание пр6 открытие модального окна
 const popup = document.querySelector('.popup');
@@ -21,7 +29,7 @@ const profileEditButton = document.querySelector('.profile__edit-button'); // к
 const popupTypeEdit = document.querySelector('.popup_type_edit');  // popup for editButton 
 
 const newCardButton = document.querySelector('.profile__add-button'); // кнопка добавления карточки
-const popupTypeAdd = document.querySelector('.popup_type_new-card') // pоpup for newCardButton
+const popupTypeAdd = document.querySelector('.popup_type_new-card .popup__form'); // pоpup for newCardButton
 
 const imageButton = document.querySelectorAll('.card__image'); // кнопка добавления по фотке
 const popupTypeImage = document.querySelector('.popup_type_image');
@@ -29,17 +37,27 @@ const popupTypeImage = document.querySelector('.popup_type_image');
 const popupImage = popupTypeImage.querySelector('.popup__image') //находим для открытия картинки при клике
 const popupDescription = document.querySelector('.popup__caption') // находим для подписи
 
+const popupForm = document.querySelector('.popup_type_edit .popup__form');  
+const nameInput = popupForm.querySelector('.popup__input_type_name');  
+const jobInput = popupForm.querySelector('.popup__input_type_description');
+
+
 profileEditButton.addEventListener('click', () => {
   nameInput.value = profileTitle.textContent; // заполняем данными которые уже на сайте
   jobInput.value = profileDescription.textContent;
   openPopup(popupTypeEdit);
+  clearValidation(popupForm, validationConfig); // из валидации
 })
 
-newCardButton.addEventListener('click', () => openPopup(popupTypeAdd)); // открытие добавить 
+newCardButton.addEventListener('click', () => {
+  popupTypeAdd.reset();
+  clearValidation(popupTypeAdd, validationConfig); // из валидации
+  openPopup(addCardForm);
+});  
 
 imageButton.forEach(imageButton => {
   imageButton.addEventListener('click', (evt) => {
-    openImage(evt.target); // Передаем нажатое изображение в функцию
+    openImage(evt.target); 
   });
 });
 
@@ -47,7 +65,7 @@ imageButton.forEach(imageButton => {
 
 document.addEventListener('click', (evt) => {
   if (evt.target.classList.contains('popup__close')) {
-    const popupOpened = evt.target.closest('.popup');// Нужно потом исправить
+    const popupOpened = evt.target.closest('.popup');
     if (popupOpened) {
       closePopup(popupOpened); 
     }
@@ -58,23 +76,27 @@ document.addEventListener('click', (evt) => {
 
 const profileTitle = document.querySelector('.profile__title'); // это поле где надпись имя
 const profileDescription = document.querySelector('.profile__description'); // это поле где надпись работа
-
-const popupForm = document.querySelector('.popup__form') // получаю форму popupForm
-
-const nameInput = popupForm.querySelector('.popup__input_type_name'); // получаю элементы формы
-const jobInput = popupForm.querySelector('.popup__input_type_description');
-
+const profileImage = document.querySelector('.profile__image')
 
 function editProfile(evt) {
-  evt.preventDefault(); // сброс 
+  evt.preventDefault(); 
+     
+  const submitButton = popupTypeEdit.querySelector('.popup__button');
+  loadingButtonText(submitButton, true);
 
   const name = nameInput.value; // получаем значения
-  const job = jobInput.value;
-  
-  profileTitle.textContent = name; // добавляем значения
-  profileDescription.textContent = job;
+  const about = jobInput.value;
 
-  closePopup(popup);
+  editUserProfile(name, about)
+  .then((res) =>{
+    profileTitle.textContent = res.name;
+    profileDescription.textContent = res.about
+    closePopup(popupTypeEdit);
+  })
+  .catch((err) => {
+    console.error(err);
+  })
+  .finally(() => loadingButtonText(submitButton, false));
 }
 
 popupForm.addEventListener('submit', editProfile);
@@ -82,22 +104,29 @@ popupForm.addEventListener('submit', editProfile);
 /// добавления карточки 
 
 const addCardForm = document.querySelector('.popup_type_new-card') 
-const nameAddCardForm = document.querySelector('.popup__input_type_card-name'); // получаем как в предыдущей функции поля
-const linkAddCardForm = document.querySelector('.popup__input_type_url');
+const nameAddCardForm = addCardForm.querySelector('.popup__input_type_card-name'); // получаем как в предыдущей функции поля
+const linkAddCardForm = addCardForm.querySelector('.popup__input_type_url');
 
 function createNewCard (evt) {
   evt.preventDefault(); 
+  const submitButton = addCardForm.querySelector('.popup__button')
+  loadingButtonText(submitButton, true);
 
   const name = nameAddCardForm.value;
   const link = linkAddCardForm.value;
-
-  const newCard = addNewCard({name: name, link: link}, deleteCard, openImage );
-  cardContent.prepend(newCard); 
-
-  nameAddCardForm.value=''; 
-  linkAddCardForm.value = '';
-
-  closePopup(addCardForm);
+ 
+  postCard(name, link)
+    .then((card) => {
+    const newCard = addNewCard(card, userId, deleteCard, openImage );
+    cardContent.prepend(newCard);
+    nameAddCardForm.value=''; 
+    linkAddCardForm.value = '';
+    closePopup(addCardForm); 
+  })
+  .catch((err) => {
+    console.error(err);
+  })
+  .finally(() => loadingButtonText(submitButton, false));
 }
 
 addCardForm.addEventListener('submit', createNewCard);
@@ -112,4 +141,69 @@ function openImage(image) {
   openPopup(popupTypeImage)
 }
 
-cardContent.addEventListener('click', likeCard);
+// пр7 ВАЛИДАЦИЯ 
+
+enableValidation(validationConfig);
+
+// пр7 api
+
+let userId; 
+
+getUserInfo()
+.then((result) => {
+  console.log(result);
+  profileTitle.textContent = result.name;
+  profileDescription.textContent = result.about;
+  profileImage.style.backgroundImage = `url(${result.avatar})`;
+  userId = result._id;
+});
+Promise.all([getUserInfo(), downloadCard()])  
+.then(([userInfo, cards]) => {  
+  userId = userInfo._id; // Присваиваем userId значение _id из userInfo
+  pushCard(cards, userId, deleteCard);
+})
+.catch((error) => {
+  console.error(error);
+});
+
+// формы для пр7
+
+// аватар
+
+const avatarPopup = document.querySelector('.popup_type_change-avatar');
+const avatarForm = avatarPopup.querySelector('.popup__form-avatar');
+const profileOverlay = document.querySelector('.profile__overlay');
+
+profileOverlay.addEventListener('click', () => {
+  avatarForm.reset();
+  clearValidation(avatarForm, validationConfig)
+  openPopup(avatarPopup);
+});
+
+function updateAvatar(evt) {
+  evt.preventDefault();
+  const submitButton = avatarForm.querySelector('.popup__button');
+  loadingButtonText(submitButton, true)
+  const avatarInput = avatarPopup.querySelector('.popup__avatar-input');
+  const avatarLink = avatarInput.value;
+  profileImage.style.backgroundImage = avatarLink;
+
+  changeAvatar(avatarLink)
+    .then((res) => {
+      profileImage.style.backgroundImage = `url(${res.avatar})`
+      closePopup(avatarPopup);
+    })
+    .catch((err) => {
+      console.error(err);
+    })
+    .finally(() => loadingButtonText(submitButton, false))
+}
+
+avatarForm.addEventListener('submit', updateAvatar);
+
+
+// функция для ux кнопок
+
+function loadingButtonText(button, isLoading) {
+  button.textContent = isLoading ? "Сохранение..." : "Сохранить";
+}

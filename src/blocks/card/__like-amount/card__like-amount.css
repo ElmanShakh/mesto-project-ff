@@ -1,0 +1,12 @@
+.card__like-amount {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: 15.73px;
+  text-align: center;
+  color: #000000;
+  display: inline-block;
+}
+
+.card__like-amount-active {
+  display: inline-block;
+}
