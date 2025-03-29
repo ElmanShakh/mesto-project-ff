@@ -2,13 +2,7 @@ import { deleteMyCard, putLike, deleteLike } from "./api";
 import { openPopup, closePopup } from "./modal";
 export { addCard, deleteCard, likeCard, addNewCard}
 
-const popupTypeClosePopup = document.querySelector('.popup_type_close-popup')
-const confirmDeleteButton = popupTypeClosePopup.querySelector('.popup__button');
-let cardToDelete;
-let cardIdToDelete;
-let deleteCardCallback;
-
-function addCard(card, userId, deleteCard){
+function addCard(card, userId, deleteCallback, likeCard, openImage){
   const cardTemplate = document.querySelector('#card-template').content;
   const cardElement = cardTemplate.querySelector('.card').cloneNode(true);
   const cardImage = cardElement.querySelector('.card__image');
@@ -23,30 +17,17 @@ function addCard(card, userId, deleteCard){
   if (card.owner._id !== userId) {
     cardDeleteButton.remove();
   } else {
-    cardDeleteButton.addEventListener('click', () => {
-      cardToDelete = cardElement;
-      cardIdToDelete = card._id;
-      deleteCardCallback = deleteCard;
-      openPopup(popupTypeClosePopup);
-    });
+    cardDeleteButton.addEventListener('click', () => {deleteCallback(cardElement, card._id)});
   }
   
   const cardLikeButton = cardElement.querySelector('.card__like-button');
   cardLikeButton.addEventListener('click', () => {
     likeCard(cardLikeButton, cardLikeAmount, userId, card._id);
   });
+
+    cardImage.addEventListener('click', () => openImage(cardImage));
     return cardElement;
 };
-
-confirmDeleteButton.addEventListener('click', () => {
-  if (cardToDelete && cardIdToDelete && typeof deleteCardCallback === 'function') {
-    deleteCardCallback(cardToDelete, cardIdToDelete);
-    cardToDelete = null;
-    cardIdToDelete = null;
-    deleteCardCallback = null;
-    closePopup(popupTypeClosePopup);
-  }
-});
 
 function deleteCard(cardElement, cardId) {
   deleteMyCard(cardId)
@@ -77,9 +58,7 @@ function likeCard(likeButton, cardLikeAmount, userId, cardId) {
     })
 }
 
-function addNewCard(card, userId, deleteCard, openImage) {
-  const cardElement = addCard(card, userId, deleteCard);
-  const cardImage = cardElement.querySelector('.card__image');
-  cardImage.addEventListener('click', () => openImage(cardImage));
-  return cardElement;
+function addNewCard(card, userId, deleteCallback, likeCard, openImage) {
+  const cardElement = addCard(card, userId, deleteCallback, likeCard, openImage);
+   return cardElement;
 }

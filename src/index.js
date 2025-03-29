@@ -2,18 +2,44 @@ import { addCard, deleteCard, likeCard, addNewCard } from './scripts/card.js';
 import { openPopup, closePopup } from './scripts/modal.js';
 import './pages/index.css'
 import { initialCards } from './scripts/cards.js';
-import {enableValidation, clearValidation, validationConfig} from './scripts/validation.js'
+import {enableValidation, clearValidation} from './scripts/validation.js'
+import { getUserInfo, postCard, downloadCards, changeAvatar, editUserProfile} from './scripts/api.js';
 
-import { getUserInfo, postCard, downloadCard, changeAvatar, editUserProfile} from './scripts/api.js';
+const validationConfig = {
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  inactiveButtonClass: 'popup__button_inactive',
+  inputErrorClass: 'form__input_type_error',
+  errorClass: 'form__input-error_active'
+};
 
+const popupTypeClosePopup = document.querySelector('.popup_type_close-popup')
+const confirmDeleteButton = popupTypeClosePopup.querySelector('.popup__button');
+let cardToDelete;
+let cardIdToDelete;
 
+confirmDeleteButton.addEventListener('click', () => {
+  if (cardToDelete && cardIdToDelete) {
+    deleteCard(cardToDelete, cardIdToDelete);  // Используем функцию deleteCard из card.js
+    cardToDelete = null;
+    cardIdToDelete = null;
+    closePopup(popupTypeClosePopup);
+  }
+})
+
+const deleteCallback = (cardElement, cardId) => {
+  cardToDelete = cardElement; 
+  cardIdToDelete = cardId; 
+  openPopup(popupTypeClosePopup);
+}
 
 const content = document.querySelector('.content');
 const cardContent = content.querySelector('.places__list');
 
-function pushCard(cards, userId, deleteCard) {
+function pushCards(cards, userId, deleteCallback, likeCard, openImage) {
   cards.forEach(cardData => {
-    const cardElement = addCard(cardData, userId, deleteCard);
+    const cardElement = addCard(cardData, userId, deleteCallback, likeCard, openImage);
     const cardImage = cardElement.querySelector('.card__image'); 
     cardImage.addEventListener('click', (evt) => {
       openImage(evt.target);
@@ -41,7 +67,6 @@ const popupForm = document.querySelector('.popup_type_edit .popup__form');
 const nameInput = popupForm.querySelector('.popup__input_type_name');  
 const jobInput = popupForm.querySelector('.popup__input_type_description');
 
-
 profileEditButton.addEventListener('click', () => {
   nameInput.value = profileTitle.textContent; // заполняем данными которые уже на сайте
   jobInput.value = profileDescription.textContent;
@@ -54,12 +79,6 @@ newCardButton.addEventListener('click', () => {
   clearValidation(popupTypeAdd, validationConfig); // из валидации
   openPopup(addCardForm);
 });  
-
-imageButton.forEach(imageButton => {
-  imageButton.addEventListener('click', (evt) => {
-    openImage(evt.target); 
-  });
-});
 
 // 1  CLOSE overlay
 
@@ -80,13 +99,10 @@ const profileImage = document.querySelector('.profile__image')
 
 function editProfile(evt) {
   evt.preventDefault(); 
-     
   const submitButton = popupTypeEdit.querySelector('.popup__button');
   loadingButtonText(submitButton, true);
-
   const name = nameInput.value; // получаем значения
   const about = jobInput.value;
-
   editUserProfile(name, about)
   .then((res) =>{
     profileTitle.textContent = res.name;
@@ -104,20 +120,19 @@ popupForm.addEventListener('submit', editProfile);
 /// добавления карточки 
 
 const addCardForm = document.querySelector('.popup_type_new-card') 
-const nameAddCardForm = addCardForm.querySelector('.popup__input_type_card-name'); // получаем как в предыдущей функции поля
+const nameAddCardForm = addCardForm.querySelector('.popup__input_type_card-name');
 const linkAddCardForm = addCardForm.querySelector('.popup__input_type_url');
 
 function createNewCard (evt) {
   evt.preventDefault(); 
   const submitButton = addCardForm.querySelector('.popup__button')
   loadingButtonText(submitButton, true);
-
   const name = nameAddCardForm.value;
   const link = linkAddCardForm.value;
  
   postCard(name, link)
     .then((card) => {
-    const newCard = addNewCard(card, userId, deleteCard, openImage );
+    const newCard = addNewCard(card, userId, deleteCallback, likeCard, openImage );
     cardContent.prepend(newCard);
     nameAddCardForm.value=''; 
     linkAddCardForm.value = '';
@@ -137,7 +152,7 @@ function openImage(image) {
   popupImage.src = image.src;
   popupImage.alt = image.alt; 
   const cardTitle = image.closest('.card').querySelector('.card__title').textContent
-  popupDescription.textContent = cardTitle; //тут другое
+  popupDescription.textContent = cardTitle;
   openPopup(popupTypeImage)
 }
 
@@ -149,18 +164,13 @@ enableValidation(validationConfig);
 
 let userId; 
 
-getUserInfo()
-.then((result) => {
-  console.log(result);
-  profileTitle.textContent = result.name;
-  profileDescription.textContent = result.about;
-  profileImage.style.backgroundImage = `url(${result.avatar})`;
-  userId = result._id;
-});
-Promise.all([getUserInfo(), downloadCard()])  
+Promise.all([getUserInfo(), downloadCards()])  
 .then(([userInfo, cards]) => {  
-  userId = userInfo._id; // Присваиваем userId значение _id из userInfo
-  pushCard(cards, userId, deleteCard);
+  userId = userInfo._id;
+  profileTitle.textContent = userInfo.name;
+  profileDescription.textContent = userInfo.about;
+  profileImage.style.backgroundImage = `url(${userInfo.avatar})`;
+  pushCards(cards, userId, deleteCallback, likeCard, openImage);
 })
 .catch((error) => {
   console.error(error);
@@ -200,7 +210,6 @@ function updateAvatar(evt) {
 }
 
 avatarForm.addEventListener('submit', updateAvatar);
-
 
 // функция для ux кнопок
 

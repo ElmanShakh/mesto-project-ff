@@ -1,7 +1,5 @@
-export {enableValidation, clearValidation, validationConfig}
+export {enableValidation, clearValidation}
 
-const popupForm = document.querySelector('.popup__form') 
-const formInput = popupForm.querySelector('.popup__input')
 
 const showInputError = (popupForm, formInput, errorMessage, config) => {
   const formError = popupForm.querySelector(`.${formInput.id}-error`);
@@ -75,11 +73,11 @@ const clearValidation = (formElement, config) => {
   toggleButtonState(inputList, buttonElement, config);
 };
 
-const validationConfig = {
-  formSelector: '.popup__form',
-  inputSelector: '.popup__input',
-  submitButtonSelector: '.popup__button',
-  inactiveButtonClass: 'popup__button_inactive',
-  inputErrorClass: 'form__input_type_error',
-  errorClass: 'form__input-error_active'
-};
+// const validationConfig = {
+//   formSelector: '.popup__form',
+//   inputSelector: '.popup__input',
+//   submitButtonSelector: '.popup__button',
+//   inactiveButtonClass: 'popup__button_inactive',
+//   inputErrorClass: 'form__input_type_error',
+//   errorClass: 'form__input-error_active'
+// };

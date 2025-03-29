@@ -26,7 +26,7 @@ export const getUserInfo = () => {
 
 // Загрузка карточек с сервера +
 
-export const downloadCard = () => {
+export const downloadCards = () => {
   return fetch(`${config.baseUrl}/cards`, {
     headers: config.headers,
   })
